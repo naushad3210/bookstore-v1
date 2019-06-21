@@ -13,6 +13,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.persistence.Version;
+
+import org.hibernate.annotations.DynamicUpdate;
 /**
  * @author mohammadnaushad
  *
@@ -23,6 +26,7 @@ import javax.persistence.UniqueConstraint;
 @Entity
 @Table(name="BOOK_DETAILS",uniqueConstraints = @UniqueConstraint(columnNames = {"title","author"}))
 @lombok.Getter @lombok.Setter
+@DynamicUpdate(value=true)
 public class BookDetailsEntity extends AuditEntity{
 	
 	private static final long serialVersionUID = 6337667652250745029L;
@@ -46,6 +50,10 @@ public class BookDetailsEntity extends AuditEntity{
 	
 	@Column(name="QUANTITY")
 	private Integer quantity;
+	
+	@Column(name="VERSION")
+	@Version
+	private long version;
 	
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "bookdetails", cascade = CascadeType.ALL)
     private Set<PurchaseHistoryEntity> purchaseHistory;

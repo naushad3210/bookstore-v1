@@ -36,6 +36,7 @@ public class BookStoreRequestDto implements Serializable{
 	private Double price;
 	
 	@Positive
+	@NotNull
 	private Integer quantity;
 
 

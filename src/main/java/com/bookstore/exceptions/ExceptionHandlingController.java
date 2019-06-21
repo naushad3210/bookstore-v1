@@ -2,6 +2,8 @@ package com.bookstore.exceptions;
 
 import java.sql.SQLException;
 
+import javax.persistence.OptimisticLockException;
+
 import org.hibernate.HibernateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +56,7 @@ public class ExceptionHandlingController {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     
-    @ExceptionHandler({SQLException.class,HibernateException.class,DuplicateRecordException.class})
+    @ExceptionHandler({HibernateException.class, ConcurrentUpdateException.class, OptimisticLockException.class, SQLException.class,DuplicateRecordException.class})
 	public  ResponseEntity<ExceptionResponseDto> handleSQLException(Exception ex){
     	LOGGER.error("-- Inside [ExceptionHandlingController] [handleSQLException()] with [data:{}]",ex.getMessage());
     	ExceptionResponseDto response = new ExceptionResponseDto();

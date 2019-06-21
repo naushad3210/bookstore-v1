@@ -22,10 +22,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.bookstore.datastub.BookStoreDataStub;
 import com.bookstore.datastub.PurchaseDataStub;
+import com.bookstore.dto.request.BookStoreRequestDto;
 import com.bookstore.dto.request.PurchaseBookRequestDto;
 import com.bookstore.entity.BookDetailsEntity;
 import com.bookstore.entity.PurchaseHistoryEntity;
-import com.bookstore.exceptions.DuplicateRecordException;
 import com.bookstore.exceptions.FieldMissingException;
 import com.bookstore.exceptions.RecordNotFoundException;
 import com.bookstore.exceptions.ResourceException;
@@ -46,14 +46,13 @@ public class BookStoreServiceTest{
 	public ExpectedException expectedEx = ExpectedException.none();
 	
 	@Test
-    public void addBookTest_isbn_noDuplicate() {
+    public void addBookTest_isbn_noRecord() {
 		
 		bookStoreServiceImpl.addBook(BookStoreDataStub.bookStoreRequestDto());
 		
 		ArgumentCaptor<BookDetailsEntity> captor = ArgumentCaptor.forClass(BookDetailsEntity.class);
 		verify(bookDetailsRepository, times(1)).save(captor.capture());
 		verify(bookDetailsRepository, times(1)).findByIsbn(any());
-		verify(bookDetailsRepository, times(1)).findByAuthorAndTitle(any(),any());
 		final BookDetailsEntity bookDetailsEntity = captor.getValue();
 		
 		assertEquals("TEST_AUTHOR", bookDetailsEntity.getAuthor());
@@ -64,28 +63,30 @@ public class BookStoreServiceTest{
     }
 	
 	@Test
-    public void addBookTest_isbn_duplicate() {
+    public void addBookTest_isbn_recordFound() {
 		when(bookDetailsRepository.findByIsbn(any())).thenReturn(BookStoreDataStub.bookDetails());
-		expectedEx.expect(DuplicateRecordException.class);
-        expectedEx.expectMessage("Book with ISBN : '123' already exist! Please try with different values!");
-		bookStoreServiceImpl.addBook(BookStoreDataStub.bookStoreRequestDto());
+		
+		BookStoreRequestDto dto = BookStoreDataStub.bookStoreRequestDto();
+		dto.setQuantity(100);
+		dto.setPrice(1000.0);
+		dto.setTitle("TTILE_CHANGED");
+		dto.setAuthor("AUTHOR_CHANGED");
+		
+		bookStoreServiceImpl.addBook(dto);
+		
+		ArgumentCaptor<BookDetailsEntity> captor = ArgumentCaptor.forClass(BookDetailsEntity.class);
+		verify(bookDetailsRepository, times(1)).save(captor.capture());
+		verify(bookDetailsRepository, times(1)).findByIsbn(any());
+		final BookDetailsEntity bookDetailsEntity = captor.getValue();
 		
 		verify(bookDetailsRepository, times(1)).findByIsbn(any());
-		verify(bookDetailsRepository, times(0)).save(any());
-		verify(bookDetailsRepository, times(0)).findByAuthorAndTitle(any(),any());
-    }
-	
-	
-	@Test
-    public void addBookTest_authorAndTitle_duplicate() {
-		when(bookDetailsRepository.findByAuthorAndTitle(any(),any())).thenReturn(BookStoreDataStub.bookDetails());
-		expectedEx.expect(DuplicateRecordException.class);
-        expectedEx.expectMessage("Book with Title : 'TEST_TITLE by Author TEST_AUTHOR' already exist! Please try with different values!");
-		bookStoreServiceImpl.addBook(BookStoreDataStub.bookStoreRequestDto());
+		verify(bookDetailsRepository, times(1)).save(any());
 		
-		verify(bookDetailsRepository, times(1)).findByIsbn(any());
-		verify(bookDetailsRepository, times(0)).save(any());
-		verify(bookDetailsRepository, times(1)).findByAuthorAndTitle(any(),any());
+		assertEquals(dto.getAuthor(), bookDetailsEntity.getAuthor());
+		assertEquals(dto.getIsbn(), bookDetailsEntity.getIsbn());
+		assertEquals(dto.getTitle(), bookDetailsEntity.getTitle());
+		assertEquals(dto.getPrice(), bookDetailsEntity.getPrice());
+		assertEquals(dto.getQuantity(), bookDetailsEntity.getQuantity());
     }
 	
 	
